@@ -18,7 +18,7 @@ export function makeStormi(parent){
  ball(head,c.cream,-.17,-.12,.38,.2,.16,.13);ball(head,c.cream,.17,-.12,.38,.2,.16,.13);
  const eyes=[-1,1].map(s=>{const e=group(head,s*.205,.025,.351);ball(e,c.black,0,0,0,.085,.1,.05);ball(e,c.cream,-.025,.031,.044,.022);return e;});
  ball(head,c.black,0,-.1,.52,.1,.075,.065);
- const mouth=ball(head,mat('#795b56'),0,-.275,.47,.065,.025,.025);
+ const mouth=group(head); // No protruding brown mouth piece on her white muzzle.
  const ears=[-1,1].map(s=>{const e=group(head,s*.4,.18,0);ball(e,c.black,s*.04,-.22,0,.19,.37,.19);for(let i=0;i<4;i++)ball(e,c.black,s*.045+(i-1.5)*.06,-.44,.03,.075,.14,.13);const b=group(e,s*.025,.05,.16);ball(b,c.pink,-.075,0,0,.09,.055,.045);ball(b,c.pink,.075,0,0,.09,.055,.045);ball(b,c.pink,0,0,.02,.038);return e;});
  const tail=group(body,0,.53,-.23);ball(tail,c.cream,0,.1,-.19,.11,.12,.28);tail.rotation.x=-.6;
  // Her pink collar and flower are taken from the supplied photograph.
@@ -28,3 +28,4 @@ export function makeStormi(parent){
  const prop=group(body,0,.85,.42);
  return {root,body,head,arms,legs,ears,tail,eyes,mouth,prop};
 }
+

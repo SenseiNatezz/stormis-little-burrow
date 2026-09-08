@@ -14,7 +14,7 @@ document.querySelector('#app').innerHTML=`
  <div class="view-controls"><button id="zoom-in" class="round" aria-label="Zoom in">＋</button><button id="zoom-out" class="round" aria-label="Zoom out">−</button><button id="reset" class="round" aria-label="Reset view">⌂</button><span></span><button id="pause" class="round" aria-label="Pause" aria-pressed="false">Ⅱ</button></div>
  <div class="hint">↔ Drag to rotate <b>·</b> Scroll to get closer <b>·</b> Click a tiny thing</div>
  <div class="status" aria-live="polite"><span id="status-icon">♨</span><div><strong id="activity">Settling in…</strong><small id="thought">Make yourself at home.</small></div><span class="status-dots">•••</span></div>
- </main><footer><div class="tray-label"><span>今日は、なにしよう？</span><small>What shall we do?</small></div><div class="actions">${actions.map(a=>`<button class="action" data-action="${a.id}" aria-label="${a.name}" aria-pressed="false"><span>${a.icon}</span><strong>${a.jp}</strong><small>${a.name.split(' ').slice(0,1).join('')}</small></button>`).join('')}</div><div class="auto-control"><button id="auto" role="switch" aria-checked="true"><span></span></button><div><strong>おまかせ</strong><small>Let Stormi choose</small></div></div></footer>
+ </main><footer><div class="tray-label"><span>今日は、なにしよう？</span><small>What shall we do?</small></div><div class="actions">${actions.map(a=>`<button class="action" data-action="${a.id}" aria-label="${a.name}" aria-pressed="false"><span>${a.icon}</span><strong>${a.name.split(' ')[0]}</strong></button>`).join('')}</div><div class="auto-control"><button id="auto" role="switch" aria-checked="true"><span></span></button><div><strong>おまかせ</strong><small>Let Stormi choose</small></div></div></footer>
  <dialog id="help-dialog"><button id="close-help" class="round" aria-label="Close controls">×</button><h2>Make yourself at home.</h2><p>Drag to orbit the burrow. Scroll or pinch to zoom.</p><p>Click furniture or choose an activity below. Stormi walks over and gets to work. Turn off おまかせ to stay with your chosen routine.</p><p>Press Space to pause, + / − to zoom, or R to reset the view.</p></dialog><div id="error" hidden></div>`;
 
 const container=document.querySelector('#world');
@@ -29,7 +29,10 @@ const {interactables}=makeRoom(scene);const dog=makeStormi(scene);dog.root.posit
 const props={};props.eat=group(dog.prop);box(props.eat,mat('#edc552'),0,0,0,.22,.17,.16);for(let i=0;i<3;i++)ball(props.eat,mat('#c59739'),-.065+i*.06,.035,.08,.018);
 props.read=group(dog.prop);for(const s of [-1,1]){const cover=box(props.read,mat('#9b6a61'),s*.12,0,0,.24,.3,.025);cover.rotation.y=s*.2;box(props.read,colors.cream,s*.12,0,.025,.21,.27,.02);}
 props.cook=group(dog.prop);box(props.cook,colors.wood,0,.08,0,.035,.42,.035);ball(props.cook,colors.gold,0,.3,0,.075,.025,.05);
-props.clean=group(dog.prop);box(props.clean,colors.wood,.17,-.11,0,.035,.95,.035);box(props.clean,colors.gold,.17,-.58,0,.29,.23,.07);
+// Anchor the broom to the end of her right paw so it cannot drift away during a sweep.
+const broomGrip=group(dog.arms[1],.035,-.32,.06);
+props.clean=group(broomGrip);ball(props.clean,colors.cream,0,0,0,.075,.085,.075);box(props.clean,colors.wood,0,-.12,0,.035,1.02,.035);box(props.clean,colors.gold,0,-.65,0,.29,.23,.07);
+Object.values(props).forEach(prop=>prop.visible=false);
 const steam=group(scene,-2,1.55,-2.2);for(let i=0;i<5;i++)ball(steam,mat('#fff8e6',{transparent:true,opacity:.22,depthWrite:false}),Math.sin(i)*.12,i*.13,0,.045);
 const sleep=document.createElement('div');sleep.className='sleep';sleep.textContent='z z Z';sleep.hidden=true;container.append(sleep);
 let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;let time=0;
@@ -57,11 +60,13 @@ function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDel
  Object.entries(props).forEach(([key,p])=>p.visible=key===id);dog.prop.position.set(0,.85,.42);dog.prop.rotation.set(0,0,0);
  if(id==='eat'){const nibble=Math.sin(t*10);dog.arms.forEach(a=>a.rotation.x=-1.05);dog.prop.position.y=1.02+nibble*.015;dog.head.rotation.x=.1;dog.mouth.scale.y=1.3+nibble*.5;}
  if(id==='read'){dog.arms.forEach(a=>a.rotation.x=-.9);dog.head.rotation.x=.15;dog.head.rotation.y=Math.sin(t*.8)*.08;dog.prop.rotation.y=Math.sin(t*.5)*.09;}
- if(id==='cook'){const taste=t%6>4;dog.arms[1].rotation.x=taste?-1.4:-.8;dog.arms[1].rotation.z=Math.sin(t*3)*.2;dog.prop.position.set(.15,taste?1.07:.9,.5);dog.prop.rotation.z=Math.sin(t*3)*.3;dog.head.rotation.x=taste?.1:Math.sin(t*2)*.04;dog.mouth.scale.y=taste?1+Math.sin(t*9)*.5:1;}
- if(id==='clean'){dog.body.rotation.z=Math.sin(t*3)*.08;dog.arms[1].rotation.x=-.7;dog.prop.rotation.z=Math.sin(t*3)*.3;dog.root.position.x=state.active.target[0]+Math.sin(t)*.28;}
+ if(id==='cook'){const taste=t%6>4;dog.arms[1].rotation.x=taste?-1.4:-.8;dog.arms[1].rotation.z=Math.sin(t*3)*.2;dog.prop.position.set(.28,taste?.8:.72,.6);dog.prop.rotation.z=Math.sin(t*3)*.3;dog.head.rotation.x=taste?.1:Math.sin(t*2)*.04;dog.mouth.scale.y=taste?1+Math.sin(t*9)*.5:1;}
+ if(id==='clean'){dog.body.rotation.z=Math.sin(t*3)*.08;dog.arms[1].rotation.set(-.7,0,Math.sin(t*3)*.22);props.clean.quaternion.copy(dog.arms[1].quaternion).invert();dog.root.position.x=state.active.target[0]+Math.sin(t)*.28;}
  if(id==='nap'){dog.root.position.set(2.4,.9,-1.9);dog.body.rotation.z=-Math.PI/2;dog.head.rotation.x=.08;dog.eyes.forEach(e=>e.scale.y=.07);dog.tail.rotation.z=Math.sin(time)*.04;}
  sleep.hidden=id!=='nap';steam.children.forEach((s,i)=>{s.position.y=((time*.18+i*.13)%.8);s.position.x=Math.sin(time+i)*.1;s.scale.setScalar(.6+s.position.y);s.material.opacity=.24*(1-s.position.y/.8);});
  }
  if(!sleep.hidden){const p=dog.root.position.clone().add(new THREE.Vector3(.45,1.1,0)).project(camera);sleep.style.left=`${(p.x*.5+.5)*container.clientWidth}px`;sleep.style.top=`${(-p.y*.5+.5)*container.clientHeight}px`;}
  controls.update();renderer.render(scene,camera);
 }animate();
+
+
